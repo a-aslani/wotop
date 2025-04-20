@@ -8,7 +8,18 @@ import (
 	"log"
 )
 
-// GenerateToken returns a unique token based on the provided email string
+// GenerateToken generates a unique token based on the provided email string.
+//
+// This function first hashes the email using bcrypt with the default cost.
+// If an error occurs during the hashing process, the program logs the error and exits.
+// The resulting bcrypt hash is then further hashed using the MD5 algorithm,
+// and the final token is returned as a hexadecimal-encoded string.
+//
+// Parameters:
+//   - email: The email string to be used for generating the token.
+//
+// Returns:
+//   - A string representing the generated token in hexadecimal format.
 func GenerateToken(email string) string {
 	hash, err := bcrypt.GenerateFromPassword([]byte(email), bcrypt.DefaultCost)
 	if err != nil {
