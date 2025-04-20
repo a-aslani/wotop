@@ -1,7 +1,7 @@
 package wotop
 
 import (
-	"github.com/a-aslani/wotop/wotop_util"
+	"github.com/a-aslani/wotop/util"
 	"time"
 )
 
@@ -42,7 +42,7 @@ type ApplicationData struct {
 func NewApplicationData(appName string) ApplicationData {
 	return ApplicationData{
 		AppName:       appName,
-		AppInstanceID: wotop_util.GenerateID(4),                 // Generate a unique 4-character ID for the application instance.
+		AppInstanceID: util.GenerateID(4),                       // Generate a unique 4-character ID for the application instance.
 		StartTime:     time.Now().Format("2006-01-02 15:04:05"), // Set the current time as the start time.
 	}
 }
