@@ -1,6 +1,6 @@
 package payload
 
-import "github.com/a-aslani/wotop.git"
+import "github.com/a-aslani/wotop"
 
 type Args struct {
 	Type      string                `json:"type"`

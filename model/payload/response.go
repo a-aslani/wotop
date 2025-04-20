@@ -2,7 +2,7 @@ package payload
 
 import (
 	"errors"
-	"github.com/a-aslani/wotop.git/model/apperror"
+	"github.com/a-aslani/wotop/model/apperror"
 )
 
 type Response struct {

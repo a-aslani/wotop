@@ -1,0 +1,7 @@
+stage: "DEVELOPMENT"
+graylog_address: "http://localhost:12201"
+
+servers:
+  product:
+    address: ":8001"
+    proxy_path: "/product"

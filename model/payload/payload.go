@@ -1,7 +1,7 @@
 package payload
 
 import (
-	"github.com/a-aslani/wotop.git"
+	"github.com/a-aslani/wotop"
 )
 
 type Payload struct {

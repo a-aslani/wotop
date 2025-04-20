@@ -2,8 +2,8 @@ package wotop_validator
 
 import (
 	"context"
-	"github.com/a-aslani/wotop.git/model/apperror"
-	"github.com/a-aslani/wotop.git/model/payload"
+	"github.com/a-aslani/wotop/model/apperror"
+	"github.com/a-aslani/wotop/model/payload"
 	"reflect"
 	"regexp"
 	"strconv"

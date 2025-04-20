@@ -1,7 +1,7 @@
 package wotop
 
 import (
-	"github.com/a-aslani/wotop.git/wotop_util"
+	"github.com/a-aslani/wotop/wotop_util"
 	"time"
 )
 

@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"github.com/a-aslani/wotop.git/model/repository"
+	"github.com/a-aslani/wotop/model/repository"
 )
 
 // WithTransaction is helper function that simplify the transaction execution handling
