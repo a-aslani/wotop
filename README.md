@@ -41,9 +41,6 @@ Additionally, WOTOP integrates core patterns and tools out of the box:
 
 ---
 
-
----
-
 ## 🚀 Quick Start
 
 1. **Install the module**
