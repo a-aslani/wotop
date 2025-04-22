@@ -47,7 +47,7 @@ type RefreshToken struct {
 	JTI     string `json:"jti" bson:"jti"`
 }
 
-type JWTToken struct {
+type token struct {
 	algorithm             jwt.SigningMethod
 	secretKey             string
 	refreshTokenValidTime time.Duration
@@ -64,7 +64,7 @@ type Repository interface {
 	FindAllBlockedTokens(ctx context.Context) ([]string, error)
 }
 
-type JWT interface {
+type Token interface {
 	GenerateToken(ctx context.Context, userId string, role string, sub string, tenant string) (accessToken, refreshToken, csrfSecret string, expiresAt int64, err error)
 	GenerateCentrifugoJWT(userId string, secretKey string) (string, error)
 	RenewToken(ctx context.Context, oldAccessTokenString string, oldRefreshTokenString, oldCsrfSecret string) (newAccessToken, newRefreshToken, newCsrfSecret string, expiresAt int64, userId string, err error)
@@ -72,9 +72,9 @@ type JWT interface {
 	VerifyToken(token string) (string, *Claims, error)
 }
 
-func NewHS256JWT(ctx context.Context, secretKey string, repo Repository, refreshTokenValidTime time.Duration, accessTokenValidTime time.Duration) (JWT, error) {
+func NewHS256JWT(ctx context.Context, secretKey string, repo Repository, refreshTokenValidTime time.Duration, accessTokenValidTime time.Duration) (Token, error) {
 
-	jwtToken := &JWTToken{
+	jwtToken := &token{
 		algorithm:             jwt.SigningMethodHS256,
 		secretKey:             secretKey,
 		refreshTokenValidTime: refreshTokenValidTime,
@@ -95,9 +95,9 @@ func NewHS256JWT(ctx context.Context, secretKey string, repo Repository, refresh
 	return jwtToken, nil
 }
 
-func NewHS512JWT(ctx context.Context, secretKey string, repo Repository, refreshTokenValidTime time.Duration, accessTokenValidTime time.Duration) (JWT, error) {
+func NewHS512JWT(ctx context.Context, secretKey string, repo Repository, refreshTokenValidTime time.Duration, accessTokenValidTime time.Duration) (Token, error) {
 
-	jwtToken := &JWTToken{
+	jwtToken := &token{
 		algorithm:             jwt.SigningMethodHS512,
 		secretKey:             secretKey,
 		refreshTokenValidTime: refreshTokenValidTime,
@@ -118,14 +118,14 @@ func NewHS512JWT(ctx context.Context, secretKey string, repo Repository, refresh
 	return jwtToken, nil
 }
 
-func NewRS256JWT(ctx context.Context, fileName string, repo Repository, refreshTokenValidTime time.Duration, accessTokenValidTime time.Duration) (JWT, error) {
+func NewRS256JWT(ctx context.Context, fileName string, repo Repository, refreshTokenValidTime time.Duration, accessTokenValidTime time.Duration) (Token, error) {
 
 	err := initRS256JWT(fileName)
 	if err != nil {
 		return nil, err
 	}
 
-	jwtToken := &JWTToken{
+	jwtToken := &token{
 		algorithm:             jwt.SigningMethodRS256,
 		refreshTokenValidTime: refreshTokenValidTime,
 		accessTokenValidTime:  accessTokenValidTime,
@@ -236,31 +236,31 @@ func generateRSAKeys(path string, fileName string) (err error) {
 	return
 }
 
-func (t *JWTToken) storeRefreshTokenToDatabase(ctx context.Context, sub, jti string) error {
+func (t *token) storeRefreshTokenToDatabase(ctx context.Context, sub, jti string) error {
 	return t.repo.StoreRefreshToken(ctx, sub, jti)
 }
 
-func (t *JWTToken) storeBlockedTokenToDatabase(ctx context.Context, sub, token string, expiresAt int64) error {
+func (t *token) storeBlockedTokenToDatabase(ctx context.Context, sub, token string, expiresAt int64) error {
 	return t.repo.StoreBlockedToken(ctx, sub, token, expiresAt)
 }
 
-func (t *JWTToken) deleteRefreshTokenFromDatabase(ctx context.Context, jti string) error {
+func (t *token) deleteRefreshTokenFromDatabase(ctx context.Context, jti string) error {
 	return t.repo.DeleteRefreshToken(ctx, jti)
 }
 
-func (t *JWTToken) findRefreshTokenFromDatabase(ctx context.Context, jti string) (sub string, err error) {
+func (t *token) findRefreshTokenFromDatabase(ctx context.Context, jti string) (sub string, err error) {
 	return t.repo.FindRefreshToken(ctx, jti)
 }
 
-func (t *JWTToken) findAllRefreshTokensFromDatabase(ctx context.Context) ([]RefreshToken, error) {
+func (t *token) findAllRefreshTokensFromDatabase(ctx context.Context) ([]RefreshToken, error) {
 	return t.repo.FindAllRefreshTokens(ctx)
 }
 
-func (t *JWTToken) findAllBlockedTokensFromDatabase(ctx context.Context) ([]string, error) {
+func (t *token) findAllBlockedTokensFromDatabase(ctx context.Context) ([]string, error) {
 	return t.repo.FindAllBlockedTokens(ctx)
 }
 
-func (t *JWTToken) initCachedRefreshTokens(ctx context.Context) (err error) {
+func (t *token) initCachedRefreshTokens(ctx context.Context) (err error) {
 
 	refreshTokens = make(map[string]string)
 
@@ -276,7 +276,7 @@ func (t *JWTToken) initCachedRefreshTokens(ctx context.Context) (err error) {
 	return
 }
 
-func (t *JWTToken) initCachedBlockedTokens(ctx context.Context) error {
+func (t *token) initCachedBlockedTokens(ctx context.Context) error {
 
 	tokens, err := t.findAllBlockedTokensFromDatabase(ctx)
 	if err != nil {
@@ -288,7 +288,7 @@ func (t *JWTToken) initCachedBlockedTokens(ctx context.Context) error {
 	return nil
 }
 
-func (t *JWTToken) VerifyToken(authToken string) (string, *Claims, error) {
+func (t *token) VerifyToken(authToken string) (string, *Claims, error) {
 
 	if len(strings.Split(authToken, " ")) > 1 {
 		authToken = strings.Split(authToken, " ")[1]
@@ -322,7 +322,7 @@ func (t *JWTToken) VerifyToken(authToken string) (string, *Claims, error) {
 	}
 }
 
-func (t *JWTToken) contains(s []string, e string) bool {
+func (t *token) contains(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
 			return true
@@ -331,7 +331,7 @@ func (t *JWTToken) contains(s []string, e string) bool {
 	return false
 }
 
-func (t *JWTToken) verifyRefreshToken(refreshToken string) (*RefreshTokenClaims, error) {
+func (t *token) verifyRefreshToken(refreshToken string) (*RefreshTokenClaims, error) {
 	token, err := jwt.ParseWithClaims(refreshToken, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return t.parseToken(token)
 	})
@@ -355,7 +355,7 @@ func (t *JWTToken) verifyRefreshToken(refreshToken string) (*RefreshTokenClaims,
 	}
 }
 
-func (t *JWTToken) storeRefreshToken(ctx context.Context, sub string) (jti string, err error) {
+func (t *token) storeRefreshToken(ctx context.Context, sub string) (jti string, err error) {
 	jti, err = t.generateRandomString(32)
 	if err != nil {
 		return
@@ -378,7 +378,7 @@ func (t *JWTToken) storeRefreshToken(ctx context.Context, sub string) (jti strin
 	return
 }
 
-func (t *JWTToken) deleteRefreshToken(ctx context.Context, refreshToken string) (err error) {
+func (t *token) deleteRefreshToken(ctx context.Context, refreshToken string) (err error) {
 
 	claims, err := t.verifyRefreshToken(refreshToken)
 	if err != nil {
@@ -410,7 +410,7 @@ func (t *JWTToken) deleteRefreshToken(ctx context.Context, refreshToken string) 
 	return
 }
 
-func (t *JWTToken) DeleteToken(ctx context.Context, accessToken, refreshToken string) (err error) {
+func (t *token) DeleteToken(ctx context.Context, accessToken, refreshToken string) (err error) {
 
 	claims, err := t.verifyRefreshToken(refreshToken)
 	if err != nil {
@@ -455,22 +455,22 @@ func (t *JWTToken) DeleteToken(ctx context.Context, accessToken, refreshToken st
 	return
 }
 
-func (t *JWTToken) checkRefreshToken(jti string) bool {
+func (t *token) checkRefreshToken(jti string) bool {
 	return refreshTokens[jti] != ""
 }
 
-func (t *JWTToken) generateCSRFSecret() (string, error) {
+func (t *token) generateCSRFSecret() (string, error) {
 	return t.generateRandomString(32)
 }
 
-func (t *JWTToken) GenerateCentrifugoJWT(userId string, secretKey string) (string, error) {
+func (t *token) GenerateCentrifugoJWT(userId string, secretKey string) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":      userId,
 		"channels": []string{"personal:broadcast"},
 	}).SignedString([]byte(secretKey))
 }
 
-func (t *JWTToken) GenerateToken(ctx context.Context, userID string, role string, sub string, tenant string) (accessToken, refreshToken, csrfSecret string, expiresAt int64, err error) {
+func (t *token) GenerateToken(ctx context.Context, userID string, role string, sub string, tenant string) (accessToken, refreshToken, csrfSecret string, expiresAt int64, err error) {
 
 	// generate the csrf secret
 	csrfSecret, err = t.generateCSRFSecret()
@@ -490,7 +490,7 @@ func (t *JWTToken) GenerateToken(ctx context.Context, userID string, role string
 	return
 }
 
-func (t *JWTToken) createAccessToken(userID string, role string, sub string, tenant string, csrfSecret string) (authTokenString string, authTokenExp int64, err error) {
+func (t *token) createAccessToken(userID string, role string, sub string, tenant string, csrfSecret string) (authTokenString string, authTokenExp int64, err error) {
 
 	authTokenExp = time.Now().Add(t.accessTokenValidTime).Unix()
 	authClaims := Claims{
@@ -509,7 +509,7 @@ func (t *JWTToken) createAccessToken(userID string, role string, sub string, ten
 	return
 }
 
-func (t *JWTToken) RenewToken(ctx context.Context, oldAccessTokenString string, oldRefreshTokenString, oldCsrfSecret string) (newAuthTokenString, newRefreshTokenString, newCsrfSecret string, expiresAt int64, userId string, err error) {
+func (t *token) RenewToken(ctx context.Context, oldAccessTokenString string, oldRefreshTokenString, oldCsrfSecret string) (newAuthTokenString, newRefreshTokenString, newCsrfSecret string, expiresAt int64, userId string, err error) {
 
 	if len(strings.Split(oldAccessTokenString, " ")) > 1 {
 		oldAccessTokenString = strings.Split(oldAccessTokenString, " ")[1]
@@ -590,7 +590,7 @@ func (t *JWTToken) RenewToken(ctx context.Context, oldAccessTokenString string, 
 	return
 }
 
-func (t *JWTToken) parseToken(token *jwt.Token) (interface{}, error) {
+func (t *token) parseToken(token *jwt.Token) (interface{}, error) {
 	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 	}
@@ -607,7 +607,7 @@ func (t *JWTToken) parseToken(token *jwt.Token) (interface{}, error) {
 	return key, nil
 }
 
-func (t *JWTToken) updateRefreshTokenCsrf(oldRefreshTokenString string, newCsrfString string) (newRefreshTokenString string, err error) {
+func (t *token) updateRefreshTokenCsrf(oldRefreshTokenString string, newCsrfString string) (newRefreshTokenString string, err error) {
 	refreshToken, err := jwt.ParseWithClaims(oldRefreshTokenString, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return t.parseToken(token)
 	})
@@ -633,7 +633,7 @@ func (t *JWTToken) updateRefreshTokenCsrf(oldRefreshTokenString string, newCsrfS
 	return
 }
 
-func (t *JWTToken) updateAccessToken(ctx context.Context, refreshTokenString string, oldAccessToken string) (newAccessToken, csrfSecret string, expiresAt int64, userId string, err error) {
+func (t *token) updateAccessToken(ctx context.Context, refreshTokenString string, oldAccessToken string) (newAccessToken, csrfSecret string, expiresAt int64, userId string, err error) {
 	refreshToken, err := jwt.ParseWithClaims(refreshTokenString, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return t.parseToken(token)
 	})
@@ -694,7 +694,7 @@ func (t *JWTToken) updateAccessToken(ctx context.Context, refreshTokenString str
 	}
 }
 
-func (t *JWTToken) sign(claims jwt.Claims) (string, error) {
+func (t *token) sign(claims jwt.Claims) (string, error) {
 	// create a signer
 	token := jwt.NewWithClaims(t.algorithm, claims)
 
@@ -714,7 +714,7 @@ func (t *JWTToken) sign(claims jwt.Claims) (string, error) {
 	return tokenString, err
 }
 
-func (t *JWTToken) updateRefreshTokenExp(ctx context.Context, oldRefreshTokenString string) (newRefreshTokenString string, err error) {
+func (t *token) updateRefreshTokenExp(ctx context.Context, oldRefreshTokenString string) (newRefreshTokenString string, err error) {
 	refreshToken, err := jwt.ParseWithClaims(oldRefreshTokenString, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return t.parseToken(token)
 	})
@@ -753,7 +753,7 @@ func (t *JWTToken) updateRefreshTokenExp(ctx context.Context, oldRefreshTokenStr
 	return
 }
 
-func (t *JWTToken) createRefreshToken(ctx context.Context, sub string, csrfString string) (refreshTokenString string, err error) {
+func (t *token) createRefreshToken(ctx context.Context, sub string, csrfString string) (refreshTokenString string, err error) {
 
 	refreshTokenExp := time.Now().Add(t.refreshTokenValidTime).Unix()
 
@@ -775,7 +775,7 @@ func (t *JWTToken) createRefreshToken(ctx context.Context, sub string, csrfStrin
 	return
 }
 
-func (t *JWTToken) grabUUID(authTokenString string) (string, error) {
+func (t *token) grabUUID(authTokenString string) (string, error) {
 	authToken, _ := jwt.ParseWithClaims(authTokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return "", ErrFetchingJWTClaims
 	})
@@ -787,7 +787,7 @@ func (t *JWTToken) grabUUID(authTokenString string) (string, error) {
 	return authTokenClaims.StandardClaims.Subject, nil
 }
 
-func (t *JWTToken) revokeRefreshToken(ctx context.Context, refreshTokenString string) error {
+func (t *token) revokeRefreshToken(ctx context.Context, refreshTokenString string) error {
 	refreshToken, err := jwt.ParseWithClaims(refreshTokenString, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return t.parseToken(token)
 	})
@@ -808,7 +808,7 @@ func (t *JWTToken) revokeRefreshToken(ctx context.Context, refreshTokenString st
 	return nil
 }
 
-func (t *JWTToken) generateRandomBytes(n int) ([]byte, error) {
+func (t *token) generateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
 	_, err := rand.Read(b)
 	if err != nil {
@@ -818,7 +818,7 @@ func (t *JWTToken) generateRandomBytes(n int) ([]byte, error) {
 	return b, nil
 }
 
-func (t *JWTToken) generateRandomString(s int) (string, error) {
+func (t *token) generateRandomString(s int) (string, error) {
 	b, err := t.generateRandomBytes(s)
 	return base64.URLEncoding.EncodeToString(b), err
 }

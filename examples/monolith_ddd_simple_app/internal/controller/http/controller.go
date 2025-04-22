@@ -14,14 +14,14 @@ import (
 )
 
 // controller represents the HTTP controller for the application.
-// It includes the router, logger, configuration, JWT handler, and metrics for monitoring.
+// It includes the router, logger, configuration, Token handler, and metrics for monitoring.
 type controller struct {
 	wotop.ControllerStarter                      // Embeds the ControllerStarter interface for starting the controller.
 	wotop.UsecaseRegisterer                      // Embeds the UsecaseRegisterer interface for registering use cases.
 	Router                  *gin.Engine          // The Gin router instance for handling HTTP requests.
 	log                     logger.Logger        // Logger for logging application events.
 	cfg                     *configs.Config      // Configuration settings for the application.
-	jwt                     jwt.JWT              // JWT handler for managing JSON Web Tokens.
+	jwt                     jwt.Token            // Token handler for managing JSON Web Tokens.
 	reqCounter              prometheus.Counter   // Prometheus counter for tracking HTTP request counts.
 	reqLatency              prometheus.Histogram // Prometheus histogram for measuring request latency.
 	proxyPath               string               // Proxy path for the application.
@@ -34,12 +34,12 @@ type controller struct {
 //   - appData: Application data containing metadata about the app.
 //   - log: Logger instance for logging application events.
 //   - cfg: Configuration settings for the application.
-//   - jwt: JWT handler for managing JSON Web Tokens.
+//   - jwt: Token handler for managing JSON Web Tokens.
 //
 // Returns:
 //
 //	A wotop.ControllerRegisterer instance for registering the controller.
-func NewController(appData wotop.ApplicationData, log logger.Logger, cfg *configs.Config, jwt jwt.JWT) wotop.ControllerRegisterer {
+func NewController(appData wotop.ApplicationData, log logger.Logger, cfg *configs.Config, jwt jwt.Token) wotop.ControllerRegisterer {
 
 	// Create a new Gin router instance.
 	router := gin.Default()

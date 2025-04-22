@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// GinMiddleware provides middleware functionality for handling JWT authentication
+// GinMiddleware provides middleware functionality for handling Token authentication
 // and extracting access tokens from HTTP headers.
 //
 // Fields:
@@ -64,18 +64,18 @@ func (g GinMiddleware) GetAccessTokenFromHeader(c *gin.Context) (token string, e
 	return
 }
 
-// Authentication is a middleware function for authenticating requests using JWT.
+// Authentication is a middleware function for authenticating requests using Token.
 //
 // This middleware extracts the access token from the "Authorization" header,
 // verifies the token, and sets the token claims in the Gin context. If the token
 // is invalid or missing, the request is aborted with a 401 Unauthorized response.
 //
 // Parameters:
-//   - jwt: An instance of the JWT interface for verifying tokens.
+//   - jwt: An instance of the Token interface for verifying tokens.
 //
 // Returns:
 //   - A Gin handler function for authentication.
-func (g GinMiddleware) Authentication(jwt JWT) gin.HandlerFunc {
+func (g GinMiddleware) Authentication(jwt Token) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 
