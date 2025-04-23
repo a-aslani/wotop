@@ -3,8 +3,8 @@ package http
 import (
 	"context"
 	"errors"
-	"github.com/a-aslani/wotop"
 	"github.com/a-aslani/wotop/logger"
+	"github.com/a-aslani/wotop/wotop"
 	"net/http"
 	"os"
 	"os/signal"
@@ -28,7 +28,7 @@ type gracefullyShutdown struct {
 // Returns:
 //
 //	A wotop.ControllerStarter instance for starting the server.
-func NewGracefullyShutdown(log logger.Logger, handler http.Handler, address string) wotop.ControllerStarter {
+func NewGracefullyShutdown(log logger.Logger, handler http.Handler, address string) wotop.wotop {
 	return &gracefullyShutdown{
 		httpServer: &http.Server{
 			Addr:    address,

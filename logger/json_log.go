@@ -3,7 +3,7 @@ package logger
 import (
 	"context"
 	"fmt"
-	"github.com/a-aslani/wotop"
+	"github.com/a-aslani/wotop/wotop"
 	"strings"
 	"time"
 )
@@ -18,7 +18,7 @@ import (
 //
 // Returns:
 //   - A Logger instance that logs messages in JSON format.
-func NewSimpleJSONLogger(appData wotop.ApplicationData, stage string) Logger {
+func NewSimpleJSONLogger(appData wotop.wotop, stage string) Logger {
 	return &simpleJSONLoggerImpl{AppData: appData, Stage: stage}
 }
 

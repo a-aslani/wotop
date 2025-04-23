@@ -2,10 +2,10 @@ package http
 
 import (
 	"fmt"
-	"github.com/a-aslani/wotop"
 	"github.com/a-aslani/wotop/examples/monolith_ddd_simple_app/configs"
 	"github.com/a-aslani/wotop/jwt"
 	"github.com/a-aslani/wotop/logger"
+	"github.com/a-aslani/wotop/wotop"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
@@ -16,7 +16,7 @@ import (
 // controller represents the HTTP controller for the application.
 // It includes the router, logger, configuration, Token handler, and metrics for monitoring.
 type controller struct {
-	wotop.ControllerStarter                      // Embeds the ControllerStarter interface for starting the controller.
+	wotop.wotop                                  // Embeds the ControllerStarter interface for starting the controller.
 	wotop.UsecaseRegisterer                      // Embeds the UsecaseRegisterer interface for registering use cases.
 	Router                  *gin.Engine          // The Gin router instance for handling HTTP requests.
 	log                     logger.Logger        // Logger for logging application events.

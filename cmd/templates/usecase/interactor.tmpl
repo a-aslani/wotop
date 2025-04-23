@@ -1,0 +1,22 @@
+package {{ .Package }}
+
+import "context"
+
+type interactor struct {
+    outport Outport
+}
+
+func NewUsecase(outport Outport) Inport {
+    return &interactor{
+        outport: outport,
+    }
+}
+
+func (i interactor) Execute(ctx context.Context, req InportRequest) (*InportResponse, error) {
+
+    res := InportResponse{}
+
+    // todo: implement usecase logic
+
+    return &res, nil
+}

@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"github.com/a-aslani/wotop"
 	"github.com/a-aslani/wotop/examples/monolith_ddd_simple_app/configs"
 	"github.com/a-aslani/wotop/logger"
+	"github.com/a-aslani/wotop/wotop"
 )
 
 type product struct{}
 
-func NewProduct() wotop.Runner[configs.Config] {
+func NewProduct() wotop.wotop[configs.Config] {
 	return &product{}
 }
 
