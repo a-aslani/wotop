@@ -46,7 +46,7 @@ Additionally, WOTOP integrates core patterns and tools out of the box:
 1. **Install the module**
 
 ```bash
-go get github.com/a-aslani/wotop@latest
+go install github.com/a-aslani/wotop@latest
 ```
    
 
