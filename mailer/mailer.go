@@ -66,7 +66,7 @@ func (m *mailer) SendSMTPMessage(templateToRender, templateName string, msg Mess
 		msg.DataMap = data
 	}
 
-	formattedMessage, err := m.buildHTMLMessage(templateName, msg)
+	formattedMessage, err := m.buildHTMLMessage(templateToRender, templateName, msg)
 	if err != nil {
 		return err
 	}
@@ -111,8 +111,7 @@ func (m *mailer) SendSMTPMessage(templateToRender, templateName string, msg Mess
 	return nil
 }
 
-func (m *mailer) buildHTMLMessage(templateName string, msg Message) (string, error) {
-	templateToRender := "./templates/mail.html.gohtml"
+func (m *mailer) buildHTMLMessage(templateToRender, templateName string, msg Message) (string, error) {
 
 	t, err := template.New("email-html").ParseFiles(templateToRender)
 	if err != nil {
