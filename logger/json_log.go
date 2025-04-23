@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"fmt"
+	"github.com/a-aslani/wotop"
 	"github.com/a-aslani/wotop/wotop"
 	"strings"
 	"time"
@@ -88,7 +89,7 @@ func newJSONLogModel(lg *simpleJSONLoggerImpl, flag, loc string, msg, trid any) 
 //   - AppData: The application data containing metadata such as app name and instance ID.
 //   - Stage: The application stage (e.g., development, production).
 type simpleJSONLoggerImpl struct {
-	AppData wotop.ApplicationData
+	AppData main.ApplicationData
 	Stage   string
 }
 

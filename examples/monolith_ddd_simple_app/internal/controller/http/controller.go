@@ -2,10 +2,10 @@ package http
 
 import (
 	"fmt"
+	"github.com/a-aslani/wotop"
 	"github.com/a-aslani/wotop/examples/monolith_ddd_simple_app/configs"
 	"github.com/a-aslani/wotop/jwt"
 	"github.com/a-aslani/wotop/logger"
-	"github.com/a-aslani/wotop/wotop"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
@@ -16,16 +16,16 @@ import (
 // controller represents the HTTP controller for the application.
 // It includes the router, logger, configuration, Token handler, and metrics for monitoring.
 type controller struct {
-	wotop.wotop                                  // Embeds the ControllerStarter interface for starting the controller.
-	wotop.UsecaseRegisterer                      // Embeds the UsecaseRegisterer interface for registering use cases.
-	Router                  *gin.Engine          // The Gin router instance for handling HTTP requests.
-	log                     logger.Logger        // Logger for logging application events.
-	cfg                     *configs.Config      // Configuration settings for the application.
-	jwt                     jwt.Token            // Token handler for managing JSON Web Tokens.
-	reqCounter              prometheus.Counter   // Prometheus counter for tracking HTTP request counts.
-	reqLatency              prometheus.Histogram // Prometheus histogram for measuring request latency.
-	proxyPath               string               // Proxy path for the application.
-	appName                 string               // Name of the application.
+	wotop.ControllerRegisterer                      // Embeds the ControllerStarter interface for starting the controller.
+	wotop.UsecaseRegisterer                         // Embeds the UsecaseRegisterer interface for registering use cases.
+	Router                     *gin.Engine          // The Gin router instance for handling HTTP requests.
+	log                        logger.Logger        // Logger for logging application events.
+	cfg                        *configs.Config      // Configuration settings for the application.
+	jwt                        jwt.Token            // Token handler for managing JSON Web Tokens.
+	reqCounter                 prometheus.Counter   // Prometheus counter for tracking HTTP request counts.
+	reqLatency                 prometheus.Histogram // Prometheus histogram for measuring request latency.
+	proxyPath                  string               // Proxy path for the application.
+	appName                    string               // Name of the application.
 }
 
 // NewController creates a new instance of the HTTP controller.

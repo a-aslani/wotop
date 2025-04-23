@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/a-aslani/wotop"
 	"github.com/a-aslani/wotop/examples/monolith_ddd_simple_app/cmd"
 	"github.com/a-aslani/wotop/examples/monolith_ddd_simple_app/configs"
-	"github.com/a-aslani/wotop/wotop"
 	"os"
 )
 
@@ -33,7 +33,7 @@ func main() {
 	}
 
 	// Define a map of application names to their corresponding runners.
-	appMap := map[string]wotop.wotop[configs.Config]{
+	appMap := map[string]wotop.Runner[configs.Config]{
 		"product": cmd.NewProduct(),
 	}
 
