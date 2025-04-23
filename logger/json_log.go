@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/a-aslani/wotop"
-	"github.com/a-aslani/wotop/wotop"
 	"strings"
 	"time"
 )
@@ -19,7 +18,7 @@ import (
 //
 // Returns:
 //   - A Logger instance that logs messages in JSON format.
-func NewSimpleJSONLogger(appData wotop.wotop, stage string) Logger {
+func NewSimpleJSONLogger(appData wotop.ApplicationData, stage string) Logger {
 	return &simpleJSONLoggerImpl{AppData: appData, Stage: stage}
 }
 
@@ -89,7 +88,7 @@ func newJSONLogModel(lg *simpleJSONLoggerImpl, flag, loc string, msg, trid any) 
 //   - AppData: The application data containing metadata such as app name and instance ID.
 //   - Stage: The application stage (e.g., development, production).
 type simpleJSONLoggerImpl struct {
-	AppData main.ApplicationData
+	AppData wotop.ApplicationData
 	Stage   string
 }
 
