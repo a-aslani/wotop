@@ -2,6 +2,7 @@ package mailer
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"time"
 
@@ -66,12 +67,15 @@ func (m *mailer) SendSMTPMessage(templateToRender, templateName string, msg Mess
 		msg.DataMap = data
 	}
 
-	formattedMessage, err := m.buildHTMLMessage(templateToRender, templateName, msg)
+	htmlTemplate := fmt.Sprintf("%s.html.gohtml", templateToRender)
+	plainTemplate := fmt.Sprintf("%s.plain.gohtml", templateToRender)
+
+	formattedMessage, err := m.buildHTMLMessage(htmlTemplate, templateName, msg)
 	if err != nil {
 		return err
 	}
 
-	plainMessage, err := m.buildPlainTextMessage(templateToRender, templateName, msg)
+	plainMessage, err := m.buildPlainTextMessage(plainTemplate, templateName, msg)
 	if err != nil {
 		return err
 	}
