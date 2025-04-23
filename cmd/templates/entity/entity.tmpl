@@ -1,0 +1,20 @@
+package entity
+
+type {{ .Entity }} struct {}
+
+type {{ .Entity }}Filter struct {}
+
+type Create{{ .Entity }}Request struct {}
+
+func (c Create{{ .Entity }}Request) Validate() error {
+    return nil
+}
+
+func New{{ .Entity }}(req Create{{ .Entity }}Request) (*{{ .Entity }}, error) {
+
+    if err := req.Validate(); err != nil {
+    	return nil, err
+    }
+
+    return &{{ .Entity }}{}, nil
+}

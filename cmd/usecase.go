@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"embed"
+	"fmt"
+	"github.com/a-aslani/wotop/util"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -27,10 +29,11 @@ var usecaseCmd = &cobra.Command{
 	Short: "Generate a usecase scaffold",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		module, name := args[0], args[1]
+		module, rawName := args[0], args[1]
+		snakeName := util.SnakeCase(rawName)
 
 		// مسیر مقصد: internal/<module>/usecase/<name>
-		destDir := filepath.Join("internal", module, "usecase", name)
+		destDir := filepath.Join("internal", module, "usecase", snakeName)
 		if err := os.MkdirAll(destDir, 0755); err != nil {
 			return err
 		}
@@ -51,6 +54,7 @@ var usecaseCmd = &cobra.Command{
 
 		for _, f := range files {
 			outPath := filepath.Join(destDir, f.outName)
+
 			outFile, err := os.Create(outPath)
 			if err != nil {
 				return err
@@ -61,13 +65,15 @@ var usecaseCmd = &cobra.Command{
 				Package string
 				Module  string
 			}{
-				Package: name,
+				Package: snakeName,
 				Module:  module,
 			}
 
 			if err := tpl.ExecuteTemplate(outFile, f.tmplName, data); err != nil {
 				return err
 			}
+
+			fmt.Printf("✅ Generated usecase at %s\n", outPath)
 		}
 		return nil
 	},
