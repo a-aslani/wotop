@@ -25,15 +25,15 @@ func loadUsecaseTemplates() (*template.Template, error) {
 }
 
 var usecaseCmd = &cobra.Command{
-	Use:   "usecase [module] [name]",
+	Use:   "usecase [domain] [name]",
 	Short: "Generate a usecase scaffold",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		module, rawName := args[0], args[1]
+		domain, rawName := args[0], args[1]
 		snakeName := util.SnakeCase(rawName)
 
-		// مسیر مقصد: internal/<module>/usecase/<name>
-		destDir := filepath.Join("internal", module, "usecase", snakeName)
+		// مسیر مقصد: internal/<domain>/usecase/<name>
+		destDir := filepath.Join("internal", domain, "usecase", snakeName)
 		if err := os.MkdirAll(destDir, 0755); err != nil {
 			return err
 		}
@@ -63,10 +63,10 @@ var usecaseCmd = &cobra.Command{
 
 			data := struct {
 				Package string
-				Module  string
+				Domain  string
 			}{
 				Package: snakeName,
-				Module:  module,
+				Domain:  domain,
 			}
 
 			if err := tpl.ExecuteTemplate(outFile, f.tmplName, data); err != nil {

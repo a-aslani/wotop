@@ -43,20 +43,20 @@ func toCamelCase(s string) string {
 }
 
 // entityCmd defines a Cobra command for generating an entity scaffold.
-// Usage: `entity [module] [name]`
-// - `module`: The module name where the entity will be created.
+// Usage: `entity [domain] [name]`
+// - `domain`: The domain name where the entity will be created.
 // - `name`: The name of the entity to generate.
 var entityCmd = &cobra.Command{
-	Use:   "entity [module] [name]",
+	Use:   "entity [domain] [name]",
 	Short: "Generate an entity scaffold",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Extract module and raw entity name from arguments.
-		module, rawName := args[0], args[1]
+		// Extract domain and raw entity name from arguments.
+		domain, rawName := args[0], args[1]
 		entityName := toCamelCase(rawName)
 
-		// Define the destination directory: internal/<module>/model/entity
-		destDir := filepath.Join("internal", module, "model", "entity")
+		// Define the destination directory: internal/<domain>/model/entity
+		destDir := filepath.Join("internal", domain, "model", "entity")
 		if err := os.MkdirAll(destDir, 0755); err != nil {
 			return err
 		}
