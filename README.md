@@ -62,11 +62,11 @@ This README covers:
 Install globally
 
 ```bash
-    # Installs to $GOBIN or $GOPATH/bin
-    go install github.com/a-aslani/wotop/cmd/wotop@latest
+# Installs to $GOBIN or $GOPATH/bin
+go install github.com/a-aslani/wotop/cmd/wotop@latest
 ```
 ```bash
-    go get -u github.com/a-aslani/wotop@latest
+go get -u github.com/a-aslani/wotop@latest
 ```
 
 Make sure $GOBIN (or $HOME/go/bin) is in your PATH so you can run wotop from anywhere.
@@ -76,7 +76,7 @@ Make sure $GOBIN (or $HOME/go/bin) is in your PATH so you can run wotop from any
 ## `usecase` Command
   
 ```bash
-  wotop usecase <domain> <name>
+wotop usecase <domain> <name>
 ```
 
 `<domain>`
@@ -93,7 +93,7 @@ Make sure $GOBIN (or $HOME/go/bin) is in your PATH so you can run wotop from any
 
 Given:
 ```bash
-  wotop usecase product getUserInfo
+wotop usecase product getUserInfo
 ```
 
 It will create:
