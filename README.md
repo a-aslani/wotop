@@ -59,30 +59,31 @@ This README covers:
 
 ## Installation
 
-1. Install globally
-    ```bash
+Install globally
+
+```bash
     # Installs to $GOBIN or $GOPATH/bin
     go install github.com/a-aslani/wotop/cmd/wotop@latest
-    ```
-    ```bash
-    go install github.com/a-aslani/wotop/cmd/wotop@latest
-    ```
+```
+```bash
+    go get -u github.com/a-aslani/wotop@latest
+```
 
-2. Ensure in your PATH
+Make sure $GOBIN (or $HOME/go/bin) is in your PATH so you can run wotop from anywhere.
 
-    Make sure $GOBIN (or $HOME/go/bin) is in your PATH so you can run wotop from anywhere.
+---
 
 ## `usecase` Command
   
 ```bash
-wotop usecase <domain> <name>
+  wotop usecase <domain> <name>
 ```
 
-### `<domain>`
+`<domain>`
 - The parent domain under internal/. 
 - E.g. if you pass product, files go under internal/product.
 
-### `<name>`
+`<name>`
 - The usecase identifier. 
 - The folder name is converted to snake_case. 
 - The Go package inside will match that snake_case folder.
@@ -92,7 +93,7 @@ wotop usecase <domain> <name>
 
 Given:
 ```bash
-wotop usecase product getUserInfo
+  wotop usecase product getUserInfo
 ```
 
 It will create:
@@ -159,11 +160,11 @@ func (i interactor) Execute(ctx context.Context, req InportRequest) (*InportResp
 wotop entity <domain> <name>
 ```
 
-### `<domain>`
+`<domain>`
 - The parent domain under internal/.
 - E.g. product → will place files in internal/product/model/entity.
 
-### `<name>`
+`<name>`
 - The entity name in camelCase, snake_case, or PascalCase.
 - Internally the struct name is converted to PascalCase.
 - The file name is generated in snake_case.
