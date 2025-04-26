@@ -12,13 +12,22 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "wotop",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "WOTOP is an open‑source Go framework designed to accelerate backend development with modern architectural patterns.",
+	Long: `
+			It brings together:
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+			- Clean Architecture for strict separation of business logic and infrastructure layers
+			- Domain‑Driven Design (DDD) to model complex domains with clarity
+			- Event‑Driven Microservices for loosely‑coupled, asynchronous communication
+			- Cloud‑Native Microservices optimized for containerized, orchestrated environments
+
+			Additionally, WOTOP integrates core patterns and tools out of the box:
+			
+			- CQRS (Command Query Responsibility Segregation)
+			- RabbitMQ message broker
+			- Event Sourcing for append‑only event storage
+		`,
+
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
