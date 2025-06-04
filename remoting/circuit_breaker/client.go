@@ -32,10 +32,12 @@ type ClientConfig struct {
 	TimeoutDuration  time.Duration
 }
 
-type Response struct {
+type Response[T any] struct {
 	Success      bool   `json:"success"`
 	ErrorCode    string `json:"error_code"`
 	ErrorMessage string `json:"error_message"`
+	Data         T      `json:"data"`
+	TraceId      string `json:"trace_id"`
 }
 
 func NewClient(name string, log logger.Logger, cfg ClientConfig) *Client {
@@ -97,21 +99,27 @@ func (c *Client) Execute(ctx context.Context, auth Authentication, method, path 
 			return nil, err
 		}
 
+		type response struct {
+			Success      bool   `json:"success"`
+			ErrorCode    string `json:"error_code"`
+			ErrorMessage string `json:"error_message"`
+		}
+
 		if resp.StatusCode >= 400 {
 
 			if resp.StatusCode >= 500 {
 
-				var response Response
+				var res response
 
-				err = json.Unmarshal(responseBody, &response)
+				err = json.Unmarshal(responseBody, &res)
 				if err != nil {
 					c.log.Error(ctx, "failed to unmarshal response body: %s", err.Error())
 					return nil, err
 				}
 
-				if !response.Success {
-					c.log.Error(ctx, "service returned error status: %d, errorMsg: %s", resp.StatusCode, response.ErrorMessage)
-					return nil, fmt.Errorf("service returned error status: %d, errorMsg: %s", resp.StatusCode, response.ErrorMessage)
+				if !res.Success {
+					c.log.Error(ctx, "service returned error status: %d, errorMsg: %s", resp.StatusCode, res.ErrorMessage)
+					return nil, fmt.Errorf("service returned error status: %d, errorMsg: %s", resp.StatusCode, res.ErrorMessage)
 				}
 			}
 
