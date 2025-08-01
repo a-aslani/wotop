@@ -77,6 +77,13 @@ func UploadFile(c *gin.Context, params Params) (*Result, error) {
 	var tmp *os.File
 
 	if params.TempDir != nil && params.TempPattern != nil {
+
+		if *params.TempDir != "" {
+			if err = os.MkdirAll(*params.TempDir, 0755); err != nil {
+				return nil, err
+			}
+		}
+
 		tmp, err = os.CreateTemp(*params.TempDir, *params.TempPattern)
 		if err != nil {
 			return nil, err
