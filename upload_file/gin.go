@@ -82,7 +82,7 @@ func UploadFile(c *gin.Context, params Params) (*Result, error) {
 			return nil, err
 		}
 
-		defer tmpFile.Close()
+		//defer tmpFile.Close()
 
 		src, err := fileHeader.Open()
 		if err != nil {
