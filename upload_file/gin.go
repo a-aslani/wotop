@@ -6,8 +6,10 @@ import (
 	"github.com/a-aslani/wotop/model/apperror"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
 const (
@@ -17,17 +19,18 @@ const (
 )
 
 type Params struct {
-	FieldName   string
-	IsRequired  bool
-	Path        string
-	MaxSize     int64
-	Accept      []string
-	TempPattern *string
-	TempDir     *string
+	FieldName     string
+	IsRequired    bool
+	Path          string
+	MaxSize       int64
+	Accept        []string
+	TempPattern   *string
+	TempDir       *string
+	SaveFileInDir bool
 }
 
 type Result struct {
-	FilePath string   `json:"file_path"`
+	FilePath *string  `json:"file_path"`
 	FileSize int64    `json:"file_size"`
 	Temp     *os.File `json:"temp"`
 }
@@ -64,16 +67,6 @@ func UploadFile(c *gin.Context, params Params) (*Result, error) {
 		return nil, ErrInvalidFileType.Var(mimeType)
 	}
 
-	ext, err := getExt(mimeType)
-	if err != nil {
-		return nil, err
-	}
-
-	filePath := fmt.Sprintf("%s/%s.%s", params.Path, uuid.NewString(), ext)
-	if err = c.SaveUploadedFile(fileHeader, filePath); err != nil {
-		return nil, err
-	}
-
 	var tmp *os.File
 
 	if params.TempDir != nil && params.TempPattern != nil {
@@ -84,8 +77,43 @@ func UploadFile(c *gin.Context, params Params) (*Result, error) {
 			}
 		}
 
-		tmp, err = os.CreateTemp(*params.TempDir, *params.TempPattern)
+		tmpFile, err := os.CreateTemp(*params.TempDir, *params.TempPattern)
 		if err != nil {
+			return nil, err
+		}
+
+		defer tmpFile.Close()
+
+		src, err := fileHeader.Open()
+		if err != nil {
+			return nil, err
+		}
+		defer src.Close()
+
+		_, err = io.Copy(tmpFile, src)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, err = tmpFile.Seek(0, io.SeekStart); err != nil {
+			return nil, err
+		}
+	}
+
+	var filePath *string
+
+	if params.SaveFileInDir {
+
+		ext := filepath.Ext(fileHeader.Filename)
+
+		finalDir := params.Path
+		if err := os.MkdirAll(finalDir, 0755); err != nil {
+			return nil, err
+		}
+
+		filename := fmt.Sprintf("%s/%s.%s", params.Path, uuid.NewString(), ext)
+		finalPath := filepath.Join(finalDir, filename)
+		if err := c.SaveUploadedFile(fileHeader, finalPath); err != nil {
 			return nil, err
 		}
 	}
