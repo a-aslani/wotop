@@ -29,27 +29,52 @@ type Params struct {
 	SaveFileInDir bool
 }
 
-type Result struct {
+type fileUploader struct {
 	FilePath *string  `json:"file_path"`
 	FileSize int64    `json:"file_size"`
 	Temp     *os.File `json:"temp"`
 }
 
-func UploadFile(c *gin.Context, params Params) (*Result, error) {
+func NewUploader() *fileUploader {
+	return &fileUploader{}
+}
+
+func (f *fileUploader) Path() string {
+	if f.FilePath == nil {
+		return ""
+	}
+	return *f.FilePath
+}
+
+func (f *fileUploader) Size() int64 {
+	return f.FileSize
+}
+
+func (f *fileUploader) TempFile() *os.File {
+	return f.Temp
+}
+
+func (f *fileUploader) Close() {
+	if f.Temp != nil {
+		defer f.Temp.Close()
+	}
+}
+
+func (f *fileUploader) Upload(c *gin.Context, params Params) error {
 
 	fileHeader, err := c.FormFile(params.FieldName)
 	if err != nil {
 		if errors.Is(err, http.ErrMissingFile) {
 			if params.IsRequired {
-				return nil, ErrMissingFile
+				return ErrMissingFile
 			}
-			return nil, nil
+			return nil
 		}
-		return nil, err
+		return err
 	}
 
 	if fileHeader.Size > params.MaxSize {
-		return nil, ErrFileSizeExceeds.Var(params.MaxSize)
+		return ErrFileSizeExceeds.Var(params.MaxSize)
 	}
 
 	mimeType := fileHeader.Header.Get("Content-Type")
@@ -64,39 +89,37 @@ func UploadFile(c *gin.Context, params Params) (*Result, error) {
 	}
 
 	if !isAccept {
-		return nil, ErrInvalidFileType.Var(mimeType)
+		return ErrInvalidFileType.Var(mimeType)
 	}
 
-	var tmp *os.File
+	var tmpFile *os.File
 
 	if params.TempDir != nil && params.TempPattern != nil {
 
 		if *params.TempDir != "" {
 			if err = os.MkdirAll(*params.TempDir, 0755); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
-		tmpFile, err := os.CreateTemp(*params.TempDir, *params.TempPattern)
+		tmpFile, err = os.CreateTemp(*params.TempDir, *params.TempPattern)
 		if err != nil {
-			return nil, err
+			return err
 		}
-
-		//defer tmpFile.Close()
 
 		src, err := fileHeader.Open()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		defer src.Close()
 
 		_, err = io.Copy(tmpFile, src)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		if _, err = tmpFile.Seek(0, io.SeekStart); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
@@ -108,21 +131,21 @@ func UploadFile(c *gin.Context, params Params) (*Result, error) {
 
 		finalDir := params.Path
 		if err := os.MkdirAll(finalDir, 0755); err != nil {
-			return nil, err
+			return err
 		}
 
 		filename := fmt.Sprintf("%s/%s.%s", params.Path, uuid.NewString(), ext)
 		finalPath := filepath.Join(finalDir, filename)
 		if err := c.SaveUploadedFile(fileHeader, finalPath); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return &Result{
-		FilePath: filePath,
-		FileSize: fileHeader.Size,
-		Temp:     tmp,
-	}, nil
+	f.FilePath = filePath
+	f.FileSize = fileHeader.Size
+	f.Temp = tmpFile
+
+	return nil
 }
 
 func Upload(c *gin.Context, params Params) (string, error) {
