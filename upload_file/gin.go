@@ -91,6 +91,8 @@ func Upload(c *gin.Context, params Params) (string, error) {
 		ext = "xz"
 	case "application/x-zip-compressed":
 		ext = "zip"
+	case "text/csv", "application/csv", "text/comma-separated-values":
+		ext = "csv"
 	default:
 		return "", ErrInvalidFileType
 	}
