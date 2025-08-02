@@ -14,7 +14,7 @@ type Centrifuge interface {
 	Disconnect(ctx context.Context, user string) error
 	History(ctx context.Context, channel string) (gocent.HistoryResult, error)
 	HistoryRemove(ctx context.Context, channel string) error
-	Info(ctx context.Context) (gocent.InfoResult, error)
+	InfoNode(ctx context.Context) (gocent.InfoResult, error)
 	Pipe() *gocent.Pipe
 	Presence(ctx context.Context, channel string) (gocent.PresenceResult, error)
 	PresenceStats(ctx context.Context, channel string) (gocent.PresenceStatsResult, error)
@@ -66,7 +66,7 @@ func (api APICentrifugoClient) HistoryRemove(ctx context.Context, channel string
 	return api.client.HistoryRemove(ctx, channel)
 }
 
-func (api APICentrifugoClient) Info(ctx context.Context) (gocent.InfoResult, error) {
+func (api APICentrifugoClient) InfoNode(ctx context.Context) (gocent.InfoResult, error) {
 	return api.client.Info(ctx)
 }
 
