@@ -7,6 +7,22 @@ import (
 	"net/http"
 )
 
+type Centrifuge interface {
+	Publish(ctx context.Context, channel string, data []byte) (gocent.PublishResult, error)
+	Broadcast(ctx context.Context, channels []string, data []byte) (gocent.BroadcastResult, error)
+	Channels(ctx context.Context) (gocent.ChannelsResult, error)
+	Disconnect(ctx context.Context, user string) error
+	History(ctx context.Context, channel string) (gocent.HistoryResult, error)
+	HistoryRemove(ctx context.Context, channel string) error
+	Info(ctx context.Context) (gocent.InfoResult, error)
+	Pipe() *gocent.Pipe
+	Presence(ctx context.Context, channel string) (gocent.PresenceResult, error)
+	PresenceStats(ctx context.Context, channel string) (gocent.PresenceStatsResult, error)
+	SendPipe(ctx context.Context, pipe *gocent.Pipe) ([]gocent.Reply, error)
+	SetHTTPClient(httpClient *http.Client)
+	Unsubscribe(ctx context.Context, channel, user string) error
+}
+
 type CentrifugeAction struct {
 	Action  string      `json:"action"`
 	Payload interface{} `json:"payload"`
