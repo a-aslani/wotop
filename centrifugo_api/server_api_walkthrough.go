@@ -8,7 +8,7 @@ import (
 )
 
 type Centrifuge interface {
-	Publish(ctx context.Context, channel string, data []byte) (gocent.PublishResult, error)
+	PublishData(ctx context.Context, channel string, data []byte) (gocent.PublishResult, error)
 	Broadcast(ctx context.Context, channels []string, data []byte) (gocent.BroadcastResult, error)
 	Channels(ctx context.Context) (gocent.ChannelsResult, error)
 	Disconnect(ctx context.Context, user string) error
@@ -42,7 +42,7 @@ func New(baseUrl string, apiKey string) *APICentrifugoClient {
 	return &APICentrifugoClient{client: c}
 }
 
-func (api APICentrifugoClient) Publish(ctx context.Context, channel string, data []byte) (gocent.PublishResult, error) {
+func (api APICentrifugoClient) PublishData(ctx context.Context, channel string, data []byte) (gocent.PublishResult, error) {
 	return api.client.Publish(ctx, channel, data)
 }
 
