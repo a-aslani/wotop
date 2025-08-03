@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -33,6 +34,7 @@ type fileUploader struct {
 	FilePath *string  `json:"file_path"`
 	FileSize int64    `json:"file_size"`
 	Temp     *os.File `json:"temp"`
+	Ext      string   `json:"ext"`
 }
 
 func NewUploader() *fileUploader {
@@ -76,6 +78,9 @@ func (f *fileUploader) Upload(c *gin.Context, params Params) error {
 	if fileHeader.Size > params.MaxSize {
 		return ErrFileSizeExceeds.Var(params.MaxSize)
 	}
+
+	ext := filepath.Ext(fileHeader.Filename)
+	f.Ext = strings.ToLower(ext)
 
 	mimeType := fileHeader.Header.Get("Content-Type")
 
@@ -126,8 +131,6 @@ func (f *fileUploader) Upload(c *gin.Context, params Params) error {
 	var filePath *string
 
 	if params.SaveFileInDir {
-
-		ext := filepath.Ext(fileHeader.Filename)
 
 		finalDir := params.Path
 		if err := os.MkdirAll(finalDir, 0755); err != nil {
