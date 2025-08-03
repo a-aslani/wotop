@@ -233,6 +233,8 @@ func getExt(mimeType string) (string, error) {
 		ext = "zip"
 	case "text/csv", "application/csv", "text/comma-separated-values":
 		ext = "csv"
+	case "application/json", "text/json":
+		ext = "json"
 	default:
 		return "", ErrInvalidFileType
 	}
