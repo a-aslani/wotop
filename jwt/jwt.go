@@ -720,8 +720,9 @@ func (t *token) generateCSRFSecret() (string, error) {
 // - error: An error if the operation fails.
 func (t *token) GenerateCentrifugoJWT(userId string, secretKey string, capsObj map[string]interface{}) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":  userId,
-		"caps": []interface{}{capsObj},
+		"sub":      userId,
+		"channels": []string{"personal:broadcast"},
+		"caps":     []interface{}{capsObj},
 	}).SignedString([]byte(secretKey))
 }
 
