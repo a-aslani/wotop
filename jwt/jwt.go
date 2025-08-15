@@ -722,7 +722,7 @@ func (t *token) GenerateCentrifugoJWT(userId string, secretKey string, capsObj m
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":      userId,
 		"channels": []string{"personal:broadcast"},
-		"caps":     []interface{}{capsObj},
+		//"caps":     []interface{}{capsObj},
 	}).SignedString([]byte(secretKey))
 }
 
