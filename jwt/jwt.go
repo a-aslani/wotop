@@ -31,11 +31,10 @@ var (
 )
 
 type Claims struct {
-	ID     string        `json:"id"`
-	Csrf   string        `json:"csrf"`
-	Role   string        `json:"role"`
-	Tenant string        `json:"tenant"`
-	Caps   []interface{} `json:"caps"`
+	ID     string `json:"id"`
+	Csrf   string `json:"csrf"`
+	Role   string `json:"role"`
+	Tenant string `json:"tenant"`
 	jwt.StandardClaims
 }
 
@@ -129,7 +128,7 @@ type Token interface {
 	// - csrfSecret: The generated CSRF secret.
 	// - expiresAt: The expiration time of the access token (in Unix timestamp).
 	// - error: An error if the operation fails.
-	GenerateToken(ctx context.Context, userId string, role string, sub string, tenant string, caps []interface{}) (accessToken, refreshToken, csrfSecret string, expiresAt int64, err error)
+	GenerateToken(ctx context.Context, userId string, role string, sub string, tenant string) (accessToken, refreshToken, csrfSecret string, expiresAt int64, err error)
 
 	// GenerateCentrifugoJWT generates a JWT for Centrifugo.
 	// Parameters:
@@ -138,7 +137,7 @@ type Token interface {
 	// Returns:
 	// - string: The generated JWT.
 	// - error: An error if the operation fails.
-	GenerateCentrifugoJWT(userId string, secretKey string) (string, error)
+	GenerateCentrifugoJWT(userId string, secretKey string, capsObj map[string]interface{}) (string, error)
 
 	// RenewToken renews an expired access token using a valid refresh token.
 	// Parameters:
@@ -719,10 +718,10 @@ func (t *token) generateCSRFSecret() (string, error) {
 // Returns:
 // - string: The generated JWT.
 // - error: An error if the operation fails.
-func (t *token) GenerateCentrifugoJWT(userId string, secretKey string) (string, error) {
+func (t *token) GenerateCentrifugoJWT(userId string, secretKey string, capsObj map[string]interface{}) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub":      userId,
-		"channels": []string{"personal:broadcast"},
+		"sub":  userId,
+		"caps": []interface{}{capsObj},
 	}).SignedString([]byte(secretKey))
 }
 
@@ -739,7 +738,7 @@ func (t *token) GenerateCentrifugoJWT(userId string, secretKey string) (string, 
 // - csrfSecret: The generated CSRF secret.
 // - expiresAt: The expiration time of the access token (in Unix timestamp).
 // - err: An error if the operation fails.
-func (t *token) GenerateToken(ctx context.Context, userID string, role string, sub string, tenant string, caps []interface{}) (accessToken, refreshToken, csrfSecret string, expiresAt int64, err error) {
+func (t *token) GenerateToken(ctx context.Context, userID string, role string, sub string, tenant string) (accessToken, refreshToken, csrfSecret string, expiresAt int64, err error) {
 
 	// generate the csrf secret
 	csrfSecret, err = t.generateCSRFSecret()
@@ -751,7 +750,7 @@ func (t *token) GenerateToken(ctx context.Context, userID string, role string, s
 	refreshToken, err = t.createRefreshToken(ctx, sub, csrfSecret)
 
 	// generate the auth token
-	accessToken, expiresAt, err = t.createAccessToken(userID, role, sub, tenant, csrfSecret, caps)
+	accessToken, expiresAt, err = t.createAccessToken(userID, role, sub, tenant, csrfSecret)
 	if err != nil {
 		return
 	}
@@ -770,7 +769,7 @@ func (t *token) GenerateToken(ctx context.Context, userID string, role string, s
 // - authTokenString: The generated access token string.
 // - authTokenExp: The expiration time of the access token (in Unix timestamp).
 // - err: An error if the operation fails.
-func (t *token) createAccessToken(userID string, role string, sub string, tenant string, csrfSecret string, caps []interface{}) (authTokenString string, authTokenExp int64, err error) {
+func (t *token) createAccessToken(userID string, role string, sub string, tenant string, csrfSecret string) (authTokenString string, authTokenExp int64, err error) {
 
 	authTokenExp = time.Now().Add(t.accessTokenValidTime).Unix()
 	authClaims := Claims{
@@ -778,7 +777,6 @@ func (t *token) createAccessToken(userID string, role string, sub string, tenant
 		Csrf:   csrfSecret,
 		Role:   role,
 		Tenant: tenant,
-		Caps:   caps,
 		StandardClaims: jwt.StandardClaims{
 			Subject:   sub,
 			ExpiresAt: authTokenExp,
@@ -990,7 +988,7 @@ func (t *token) updateAccessToken(ctx context.Context, refreshTokenString string
 
 			userId = oldAuthTokenClaims.ID
 
-			newAccessToken, expiresAt, err = t.createAccessToken(oldAuthTokenClaims.ID, oldAuthTokenClaims.Role, oldAuthTokenClaims.StandardClaims.Subject, oldAuthTokenClaims.Tenant, csrfSecret, oldAuthTokenClaims.Caps)
+			newAccessToken, expiresAt, err = t.createAccessToken(oldAuthTokenClaims.ID, oldAuthTokenClaims.Role, oldAuthTokenClaims.StandardClaims.Subject, oldAuthTokenClaims.Tenant, csrfSecret)
 
 			return
 		} else {
