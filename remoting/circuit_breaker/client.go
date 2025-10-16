@@ -5,12 +5,14 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/a-aslani/wotop/logger"
-	"github.com/sony/gobreaker"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/a-aslani/wotop/logger"
+	"github.com/sony/gobreaker"
 )
 
 type Client struct {
@@ -107,24 +109,21 @@ func (c *Client) Execute(ctx context.Context, auth Authentication, method, path 
 
 		if resp.StatusCode >= 400 {
 
-			if resp.StatusCode >= 500 {
+			var res response
 
-				var res response
-
-				err = json.Unmarshal(responseBody, &res)
-				if err != nil {
-					c.log.Error(ctx, "failed to unmarshal response body: %s", err.Error())
-					return nil, err
-				}
-
-				if !res.Success {
-					c.log.Error(ctx, "service returned error status: %d, errorMsg: %s", resp.StatusCode, res.ErrorMessage)
-					return nil, fmt.Errorf("service returned error status: %d, errorMsg: %s", resp.StatusCode, res.ErrorMessage)
-				}
+			err = json.Unmarshal(responseBody, &res)
+			if err != nil {
+				c.log.Error(ctx, "failed to unmarshal response body: %s", err.Error())
+				return nil, err
 			}
 
-			c.log.Error(ctx, "service returned error status: %d", resp.StatusCode)
-			return nil, fmt.Errorf("service returned error status: %d", resp.StatusCode)
+			if !res.Success {
+				c.log.Error(ctx, "service returned error status: %d, errorMsg: %s", resp.StatusCode, res.ErrorMessage)
+				return nil, errors.New(res.ErrorMessage)
+			}
+
+			c.log.Error(ctx, "service returned error status: %d, errorMsg: %s", resp.StatusCode, res.ErrorMessage)
+			return nil, fmt.Errorf("service returned error status: %d, errorMsg: %s", resp.StatusCode, res.ErrorMessage)
 		}
 
 		return responseBody, nil
