@@ -106,6 +106,12 @@ func (m *mailer) prepareMessage(msg Message) Message {
 }
 
 func (m *mailer) send(htmlBody, plainBody string, msg Message) error {
+
+	processedSubject, err := m.parseString(msg.Subject, msg.DataMap)
+	if err != nil {
+		return err
+	}
+
 	server := mail.NewSMTPClient()
 	server.Host = m.host
 	server.Port = m.port
@@ -122,7 +128,8 @@ func (m *mailer) send(htmlBody, plainBody string, msg Message) error {
 	}
 
 	email := mail.NewMSG()
-	email.SetFrom(msg.From).AddTo(msg.To).SetSubject(msg.Subject)
+
+	email.SetFrom(msg.From).AddTo(msg.To).SetSubject(processedSubject)
 
 	email.SetBody(mail.TextPlain, plainBody)
 	email.AddAlternative(mail.TextHTML, htmlBody)
@@ -136,24 +143,34 @@ func (m *mailer) send(htmlBody, plainBody string, msg Message) error {
 	return email.Send(smtpClient)
 }
 
-// --- File Based Builders ---
-func (m *mailer) buildHTMLMessage(templatePath, templateName string, msg Message) (string, error) {
-	t, err := template.New("email-html").ParseFiles(templatePath)
+func (m *mailer) parseString(tplString string, data map[string]any) (string, error) {
+	t, err := template.New("inline-string").Parse(tplString)
 	if err != nil {
 		return "", err
 	}
 
 	var tpl bytes.Buffer
-	if err = t.ExecuteTemplate(&tpl, templateName, msg.DataMap); err != nil {
+	if err = t.Execute(&tpl, data); err != nil {
 		return "", err
 	}
 
+	return tpl.String(), nil
+}
+
+func (m *mailer) buildHTMLMessage(templatePath, templateName string, msg Message) (string, error) {
+	t, err := template.New("email-html").ParseFiles(templatePath)
+	if err != nil {
+		return "", err
+	}
+	var tpl bytes.Buffer
+	if err = t.ExecuteTemplate(&tpl, templateName, msg.DataMap); err != nil {
+		return "", err
+	}
 	formattedMessage := tpl.String()
 	formattedMessage, err = m.inlineCSS(formattedMessage)
 	if err != nil {
 		return "", err
 	}
-
 	return formattedMessage, nil
 }
 
@@ -162,33 +179,27 @@ func (m *mailer) buildPlainTextMessage(templatePath, templateName string, msg Me
 	if err != nil {
 		return "", err
 	}
-
 	var tpl bytes.Buffer
 	if err = t.ExecuteTemplate(&tpl, templateName, msg.DataMap); err != nil {
 		return "", err
 	}
-
 	return tpl.String(), nil
 }
 
-// --- String Based Builders (New) ---
 func (m *mailer) buildHTMLMessageFromString(htmlContent string, msg Message) (string, error) {
 	t, err := template.New("email-html-string").Parse(htmlContent)
 	if err != nil {
 		return "", err
 	}
-
 	var tpl bytes.Buffer
 	if err = t.Execute(&tpl, msg.DataMap); err != nil {
 		return "", err
 	}
-
 	formattedMessage := tpl.String()
 	formattedMessage, err = m.inlineCSS(formattedMessage)
 	if err != nil {
 		return "", err
 	}
-
 	return formattedMessage, nil
 }
 
@@ -197,33 +208,27 @@ func (m *mailer) buildPlainTextMessageFromString(plainContent string, msg Messag
 	if err != nil {
 		return "", err
 	}
-
 	var tpl bytes.Buffer
 	if err = t.Execute(&tpl, msg.DataMap); err != nil {
 		return "", err
 	}
-
 	return tpl.String(), nil
 }
 
-// --- Helpers ---
 func (m *mailer) inlineCSS(s string) (string, error) {
 	options := premailer.Options{
 		RemoveClasses:     false,
 		CssToAttributes:   false,
 		KeepBangImportant: true,
 	}
-
 	prem, err := premailer.NewPremailerFromString(s, &options)
 	if err != nil {
 		return "", err
 	}
-
 	html, err := prem.Transform()
 	if err != nil {
 		return "", err
 	}
-
 	return html, nil
 }
 
