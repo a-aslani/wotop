@@ -12,6 +12,7 @@ import (
 
 type Mailer interface {
 	SendSMTPMessage(templateToRender, templateName string, msg Message) error
+	SendSMTPMessageFromString(htmlContent, plainContent string, msg Message) error
 }
 
 type mailer struct {
@@ -51,6 +52,41 @@ func NewMail(domain string, host string, port int, username string, password str
 }
 
 func (m *mailer) SendSMTPMessage(templateToRender, templateName string, msg Message) error {
+	msg = m.prepareMessage(msg)
+
+	htmlPath := fmt.Sprintf("%s.html.gohtml", templateToRender)
+	plainPath := fmt.Sprintf("%s.plain.gohtml", templateToRender)
+
+	formattedMessage, err := m.buildHTMLMessage(htmlPath, templateName, msg)
+	if err != nil {
+		return err
+	}
+
+	plainMessage, err := m.buildPlainTextMessage(plainPath, templateName, msg)
+	if err != nil {
+		return err
+	}
+
+	return m.send(formattedMessage, plainMessage, msg)
+}
+
+func (m *mailer) SendSMTPMessageFromString(htmlContent, plainContent string, msg Message) error {
+	msg = m.prepareMessage(msg)
+
+	formattedMessage, err := m.buildHTMLMessageFromString(htmlContent, msg)
+	if err != nil {
+		return err
+	}
+
+	plainMessage, err := m.buildPlainTextMessageFromString(plainContent, msg)
+	if err != nil {
+		return err
+	}
+
+	return m.send(formattedMessage, plainMessage, msg)
+}
+
+func (m *mailer) prepareMessage(msg Message) Message {
 	if msg.From == "" {
 		msg.From = m.fromAddress
 	}
@@ -66,20 +102,10 @@ func (m *mailer) SendSMTPMessage(templateToRender, templateName string, msg Mess
 	if msg.DataMap == nil {
 		msg.DataMap = data
 	}
+	return msg
+}
 
-	htmlTemplate := fmt.Sprintf("%s.html.gohtml", templateToRender)
-	plainTemplate := fmt.Sprintf("%s.plain.gohtml", templateToRender)
-
-	formattedMessage, err := m.buildHTMLMessage(htmlTemplate, templateName, msg)
-	if err != nil {
-		return err
-	}
-
-	plainMessage, err := m.buildPlainTextMessage(plainTemplate, templateName, msg)
-	if err != nil {
-		return err
-	}
-
+func (m *mailer) send(htmlBody, plainBody string, msg Message) error {
 	server := mail.NewSMTPClient()
 	server.Host = m.host
 	server.Port = m.port
@@ -98,8 +124,8 @@ func (m *mailer) SendSMTPMessage(templateToRender, templateName string, msg Mess
 	email := mail.NewMSG()
 	email.SetFrom(msg.From).AddTo(msg.To).SetSubject(msg.Subject)
 
-	email.SetBody(mail.TextPlain, plainMessage)
-	email.AddAlternative(mail.TextHTML, formattedMessage)
+	email.SetBody(mail.TextPlain, plainBody)
+	email.AddAlternative(mail.TextHTML, htmlBody)
 
 	if len(msg.Attachments) > 0 {
 		for _, x := range msg.Attachments {
@@ -107,17 +133,12 @@ func (m *mailer) SendSMTPMessage(templateToRender, templateName string, msg Mess
 		}
 	}
 
-	err = email.Send(smtpClient)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return email.Send(smtpClient)
 }
 
-func (m *mailer) buildHTMLMessage(templateToRender, templateName string, msg Message) (string, error) {
-
-	t, err := template.New("email-html").ParseFiles(templateToRender)
+// --- File Based Builders ---
+func (m *mailer) buildHTMLMessage(templatePath, templateName string, msg Message) (string, error) {
+	t, err := template.New("email-html").ParseFiles(templatePath)
 	if err != nil {
 		return "", err
 	}
@@ -136,9 +157,8 @@ func (m *mailer) buildHTMLMessage(templateToRender, templateName string, msg Mes
 	return formattedMessage, nil
 }
 
-func (m *mailer) buildPlainTextMessage(templateToRender, templateName string, msg Message) (string, error) {
-
-	t, err := template.New("email-plain").ParseFiles(templateToRender)
+func (m *mailer) buildPlainTextMessage(templatePath, templateName string, msg Message) (string, error) {
+	t, err := template.New("email-plain").ParseFiles(templatePath)
 	if err != nil {
 		return "", err
 	}
@@ -148,11 +168,45 @@ func (m *mailer) buildPlainTextMessage(templateToRender, templateName string, ms
 		return "", err
 	}
 
-	plainMessage := tpl.String()
-
-	return plainMessage, nil
+	return tpl.String(), nil
 }
 
+// --- String Based Builders (New) ---
+func (m *mailer) buildHTMLMessageFromString(htmlContent string, msg Message) (string, error) {
+	t, err := template.New("email-html-string").Parse(htmlContent)
+	if err != nil {
+		return "", err
+	}
+
+	var tpl bytes.Buffer
+	if err = t.Execute(&tpl, msg.DataMap); err != nil {
+		return "", err
+	}
+
+	formattedMessage := tpl.String()
+	formattedMessage, err = m.inlineCSS(formattedMessage)
+	if err != nil {
+		return "", err
+	}
+
+	return formattedMessage, nil
+}
+
+func (m *mailer) buildPlainTextMessageFromString(plainContent string, msg Message) (string, error) {
+	t, err := template.New("email-plain-string").Parse(plainContent)
+	if err != nil {
+		return "", err
+	}
+
+	var tpl bytes.Buffer
+	if err = t.Execute(&tpl, msg.DataMap); err != nil {
+		return "", err
+	}
+
+	return tpl.String(), nil
+}
+
+// --- Helpers ---
 func (m *mailer) inlineCSS(s string) (string, error) {
 	options := premailer.Options{
 		RemoveClasses:     false,
