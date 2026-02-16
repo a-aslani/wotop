@@ -106,7 +106,6 @@ func (m *mailer) prepareMessage(msg Message) Message {
 }
 
 func (m *mailer) send(htmlBody, plainBody string, msg Message) error {
-
 	processedSubject, err := m.parseString(msg.Subject, msg.DataMap)
 	if err != nil {
 		return err
@@ -129,7 +128,12 @@ func (m *mailer) send(htmlBody, plainBody string, msg Message) error {
 
 	email := mail.NewMSG()
 
-	email.SetFrom(msg.From).AddTo(msg.To).SetSubject(processedSubject)
+	fromAddress := msg.From
+	if msg.FromName != "" {
+		fromAddress = fmt.Sprintf("%s <%s>", msg.FromName, msg.From)
+	}
+
+	email.SetFrom(fromAddress).AddTo(msg.To).SetSubject(processedSubject)
 
 	email.SetBody(mail.TextPlain, plainBody)
 	email.AddAlternative(mail.TextHTML, htmlBody)
