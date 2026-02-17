@@ -13,6 +13,9 @@ import (
 type Mailer interface {
 	SendSMTPMessage(templateToRender, templateName string, msg Message) error
 	SendSMTPMessageFromString(htmlContent, plainContent string, msg Message) error
+	ParseString(tplString string, data map[string]any) (string, error)
+	BuildHTMLMessageFromString(htmlContent string, msg Message) (string, error)
+	BuildPlainTextMessageFromString(plainContent string, msg Message) (string, error)
 }
 
 type mailer struct {
@@ -73,12 +76,12 @@ func (m *mailer) SendSMTPMessage(templateToRender, templateName string, msg Mess
 func (m *mailer) SendSMTPMessageFromString(htmlContent, plainContent string, msg Message) error {
 	msg = m.prepareMessage(msg)
 
-	formattedMessage, err := m.buildHTMLMessageFromString(htmlContent, msg)
+	formattedMessage, err := m.BuildHTMLMessageFromString(htmlContent, msg)
 	if err != nil {
 		return err
 	}
 
-	plainMessage, err := m.buildPlainTextMessageFromString(plainContent, msg)
+	plainMessage, err := m.BuildPlainTextMessageFromString(plainContent, msg)
 	if err != nil {
 		return err
 	}
@@ -106,7 +109,7 @@ func (m *mailer) prepareMessage(msg Message) Message {
 }
 
 func (m *mailer) send(htmlBody, plainBody string, msg Message) error {
-	processedSubject, err := m.parseString(msg.Subject, msg.DataMap)
+	processedSubject, err := m.ParseString(msg.Subject, msg.DataMap)
 	if err != nil {
 		return err
 	}
@@ -147,7 +150,7 @@ func (m *mailer) send(htmlBody, plainBody string, msg Message) error {
 	return email.Send(smtpClient)
 }
 
-func (m *mailer) parseString(tplString string, data map[string]any) (string, error) {
+func (m *mailer) ParseString(tplString string, data map[string]any) (string, error) {
 	t, err := template.New("inline-string").Parse(tplString)
 	if err != nil {
 		return "", err
@@ -190,7 +193,7 @@ func (m *mailer) buildPlainTextMessage(templatePath, templateName string, msg Me
 	return tpl.String(), nil
 }
 
-func (m *mailer) buildHTMLMessageFromString(htmlContent string, msg Message) (string, error) {
+func (m *mailer) BuildHTMLMessageFromString(htmlContent string, msg Message) (string, error) {
 	t, err := template.New("email-html-string").Parse(htmlContent)
 	if err != nil {
 		return "", err
@@ -207,7 +210,7 @@ func (m *mailer) buildHTMLMessageFromString(htmlContent string, msg Message) (st
 	return formattedMessage, nil
 }
 
-func (m *mailer) buildPlainTextMessageFromString(plainContent string, msg Message) (string, error) {
+func (m *mailer) BuildPlainTextMessageFromString(plainContent string, msg Message) (string, error) {
 	t, err := template.New("email-plain-string").Parse(plainContent)
 	if err != nil {
 		return "", err
